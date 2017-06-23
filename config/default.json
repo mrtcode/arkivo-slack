@@ -1,0 +1,7 @@
+{
+	"arkivo": {
+		"plugins": [
+			"./plugin"
+		]
+	}
+}
