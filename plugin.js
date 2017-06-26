@@ -1,15 +1,11 @@
 'use strict';
 
-// Load Arkivo default config object.
-// It can be extended by creating ./config/default.json
-// in the current plugin directory.
+// Load Arkivo default config.
+// It can be overridden by creating './config/default.json'
+// file in the plugin's directory.
 var config = require('arkivo/lib/config');
 
-
-var common = require('arkivo/lib/common');
-var extend = common.extend;
-
-// Plugin uses Incoming WebHook to post messages to a Slack channel.
+// This plugin uses Incoming WebHooks to post messages to Slack channels.
 var IncomingWebhook = require('@slack/client').IncomingWebhook;
 
 /**
@@ -19,19 +15,19 @@ var IncomingWebhook = require('@slack/client').IncomingWebhook;
  * @constructor
  */
 var Slack = function (options) {
-	// Set defaults for current options
-	this.options = extend({}, Slack.defaults);
+	// Add plugin defaults to the 'options' object.
+	this.options = Object.assign({}, Slack.defaults);
 	
-	// Extend options with Arkivo config i.e. ./config/default.json.
+	// Extend the 'options' object with the Arkivo config (from ./config/default.json).
 	if (config.has('slack')) {
-		extend(this.options, config.get('slack'));
+		Object.assign(this.options, config.get('slack'));
 	}
 	
-	// Extend options with subscription specific parameters
-	// passed to this plugin instance
-	extend(this.options, options);
+	// Extend the 'options' object with subscription specific
+	// parameters passed to this plugin instance.
+	Object.assign(this.options, options);
 	
-	// Initialize WebHook that points to a specific Slack channel
+	// Initialize WebHook that points to a specific Slack channel.
 	this.webhook = new IncomingWebhook(this.options.webhookUrl);
 };
 
@@ -51,18 +47,26 @@ Slack.defaults = {
  * Send a message to Slack.
  *
  * @method send
+ *
+ * @param text
+ * @return {Promise.<void>}
  */
-Slack.prototype.send = function (text, callback) {
-	// Customize message appearance
+Slack.prototype.send = function (text) {
+	var slack = this;
+	// Customize message appearance.
 	var data = {
 		username: this.options.botName,
 		iconUrl: this.options.botIconUrl,
 		text: text
 	};
 	
-	this.webhook.send(data, function (err) {
-		if (err) return callback(err);
-		callback();
+	// Convert Slack WebHook send function to a promise.
+	return new Promise(function (resolve, reject) {
+		// Send to Slack
+		slack.webhook.send(data, function (err) {
+			if (err) return reject(err);
+			resolve();
+		});
 	});
 };
 
@@ -72,35 +76,37 @@ Slack.prototype.send = function (text, callback) {
  * @method process
  *
  * @param sync
- * @param callback
+ * @return {Promise.<void>}
  */
-Slack.prototype.process = function (sync, callback) {
-	// Get a library from the first item
-	var library = sync.items[Object.keys(sync.items)[0]].library;
+Slack.prototype.process = async function (sync) {
+	// Get a library from the first item.
+	var itemKeys = Object.keys(sync.items);
+	if (!itemKeys.length) return;
+	var library = sync.items[itemKeys[0]].library;
 	
-	// Generate a message.
+	// Generate a message. I.e.: '2 items added to university1 library:'.
 	var message = '';
 	if (sync.created.length) {
 		message +=
 			sync.created.length +
+			// Add 's' for plural numbers.
 			' item' + (sync.created.length > 1 ? 's' : '') +
 			' added to ' +
 			library.name + ' library:';
 	}
 	
-	// Add newly created items' links to the message.
+	// Append newly created items' links to the message.
 	sync.created.forEach(function (key) {
 		var item = sync.items[key];
 		var url = item.links.alternate.href;
 		var title = item.data.title || item.data.note;
+		// Slack has a specific formatting syntax similar to Markdown.
 		message += '\n<' + url + '|' + title + '>';
 	});
 	
-	// Send the message to a Slack channel.
-	this.send(message, function (err) {
-		if (err) return callback(err);
-		callback();
-	});
+	// Send the message to a Slack channel and
+	// wait for the asynchronous operation to finish.
+	await this.send(message);
 };
 
 module.exports = {
@@ -116,13 +122,14 @@ module.exports = {
 		}
 	},
 	// The actual plugin logic starts here.
-	process: function (sync, done) {
+	// 'sync' object contains created/updated/deleted items.
+	process: function (sync) {
 		// Creates a new Arkivo Slack plugin's instance and
-		// passes a configuration of the current subscription
+		// passes the configuration of the current subscription
 		// i.e. WebHook URL.
 		var slack = new Slack(this.options);
 		
-		// Starts processing items and calls 'done' when finished.
-		slack.process(sync, done);
+		// Starts processing items and returns a promise to the Arkivo plugin handler.
+		return slack.process(sync);
 	}
 };
