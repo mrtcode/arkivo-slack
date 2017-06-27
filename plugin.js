@@ -5,7 +5,7 @@
 // file in the plugin's directory.
 var config = require('arkivo/lib/config');
 
-// This plugin uses Incoming WebHooks to post messages to Slack channels.
+// This plugin uses Incoming WebHooks for posting messages to Slack channels.
 var IncomingWebhook = require('@slack/client').IncomingWebhook;
 
 /**
@@ -105,7 +105,7 @@ Slack.prototype.process = async function (sync) {
 	});
 	
 	// Send the message to a Slack channel and
-	// wait for the asynchronous operation to finish.
+	// wait for the asynchronous function to finish.
 	await this.send(message);
 };
 
@@ -126,7 +126,7 @@ module.exports = {
 	process: function (sync) {
 		// Creates a new Arkivo Slack plugin's instance and
 		// passes the configuration of the current subscription
-		// i.e. WebHook URL.
+		// i.e.: 'webhookUrl'.
 		var slack = new Slack(this.options);
 		
 		// Starts processing items and returns a promise to the Arkivo plugin handler.
