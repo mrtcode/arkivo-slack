@@ -21,8 +21,9 @@ npm install
 ```
 
 ### Start Arkivo
+Start Arkivo with enabled debug.
 ```
-$(npm bin)/arkivo up
+DEBUG=arkivo:* $(npm bin)/arkivo up
 ```
 
 ### Create a Slack Incoming WebHook URL for a specific channel.
@@ -48,7 +49,7 @@ curl -X POST http://localhost:8888/api/subscription \
   "skip": true,
   "plugins": [
     {
-      "name": "logger",
+      "name": "slack",
       "options": {
         "webhookUrl": "https://hooks.slack.com/services/V9XBFPRFA/Y7XCFK4WG/ejO6LLyVlRKNqRpi1p4V2Mga"
       }
