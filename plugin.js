@@ -1,8 +1,10 @@
 'use strict';
 
+var debug = require('debug')('arkivo:plugins:slack');
+
 // Load Arkivo default config.
 // It can be overridden by creating './config/default.json'
-// file in the plugin directory.
+// file in the plugin's directory.
 var config = require('arkivo/lib/config');
 
 // This plugin uses Incoming WebHooks for posting messages to Slack channels.
@@ -15,6 +17,7 @@ var IncomingWebhook = require('@slack/client').IncomingWebhook;
  * @constructor
  */
 var Slack = function (options) {
+  debug('Initializing');
   // Add plugin defaults to the 'options' object.
   this.options = Object.assign({}, Slack.defaults);
 
@@ -60,11 +63,13 @@ Slack.prototype.send = function (text) {
     text: text
   };
 
+  debug('Sending the message to Slack:', data);
   // Convert the Slack WebHook send function to a promise.
   return new Promise(function (resolve, reject) {
     // Send to Slack
     slack.webhook.send(data, function (err) {
       if (err) return reject(err);
+      debug('Message sent');
       resolve();
     });
   });
@@ -81,25 +86,38 @@ Slack.prototype.send = function (text) {
 Slack.prototype.process = async function (sync) {
   // Get a library from the first item.
   var itemKeys = Object.keys(sync.items);
+
+  // Arkivo triggers plugin processing even
+  // when zero items are fetched from the subscription URL.
   if (!itemKeys.length) return;
+
   var library = sync.items[itemKeys[0]].library;
 
-  // Generate a message. I.e.: '2 items added to university1 library:'.
-  var message = '';
-  if (sync.created.length) {
-    message +=
-      sync.created.length +
-      // Add 's' for plural numbers.
-      ' item' + (sync.created.length > 1 ? 's' : '') +
-      ' added to ' +
-      library.name + ' library:';
+  if (!sync.created.length) {
+    debug('No new items added');
+    return;
   }
+
+  // Generate a message. I.e.: '2 items added to university1 library:'.
+  var message =
+    sync.created.length +
+    // Add 's' for plural numbers.
+    ' item' + (sync.created.length > 1 ? 's' : '') +
+    ' added to ' +
+    library.name + ' library:';
 
   // Append newly created items' links to the message.
   sync.created.forEach(function (key) {
     var item = sync.items[key];
-    var url = item.links.alternate.href;
-    var title = item.data.title || item.data.note;
+    var url = encodeURI(item.links.alternate.href);
+    var title = item.data.title;
+
+    // Notes don't have titles.
+    if (!title && item.data.note) {
+      // Strip HTML tags, new lines, and limit note length to 64 symbols.
+      title = item.data.note.replace(/<(?:.|\n)*?>|\n/gm, '').slice(0, 64);
+    }
+
     // Slack has a specific formatting syntax similar to Markdown.
     message += '\n<' + url + '|' + title + '>';
   });

@@ -21,7 +21,7 @@ npm install
 ```
 
 ### Start Arkivo
-Start Arkivo with enabled debug.
+Start Arkivo with enabled debug output.
 ```
 DEBUG=arkivo:* $(npm bin)/arkivo up
 ```
@@ -44,7 +44,7 @@ curl -X POST http://localhost:8888/api/subscription \
 -H 'Content-Type: application/json' \
 -d @- << EOF
 {
-  "url": "/users/123456/items",
+  "url": "/users/123456/items/top",
   "key": "vdZB5zVvYbai7ETJlln5vRyi",
   "skip": true,
   "plugins": [
@@ -71,3 +71,13 @@ Explanation of JSON parameters in the request:
 * `skip` - Skip processing already existing items.
 * `plugins[].name` - Activates the plugin for the current subscription.
 * `plugins[].options` - Plugin options for the current subscription. Only `webhookUrl` is necessary for this plugin.
+
+### List all Arkivo subscriptions
+```
+curl http://localhost:8888/api/subscription
+```
+
+### Delete a subscription
+```
+curl -X "DELETE" http://localhost:8888/api/subscription/SUBSCRIPTION_ID
+```
