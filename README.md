@@ -32,9 +32,9 @@ $(npm bin)/arkivo up
 4. Copy the link from "WebHook URL" section.
 
 ### Add an Arkivo subscription
-Each subscription can have multiple plugins and each plugin can have different configuration that is valid only for the specific subscription.
+Each subscription can have multiple plugins and each plugin can have a different configuration that is valid only for the specific subscription.
 
-Arkivo has an integrated HTTP API which can be used to create or delete subscriptions.
+Arkivo has an integrated HTTP API which can be used to create, list or delete subscriptions.
 
 Here is a request example to create a subscription with an activated and configured Arkivo Slack plugin:
 
@@ -58,14 +58,14 @@ curl -X POST http://localhost:8888/api/subscription \
 EOF
 ```
 
-Explanation of JSON parameters in the request.
+Explanation of JSON parameters in the request:
 
 * `url` - A path part of Zotero API endpoint URL that returns item array. For example:
-	* `/users/123456/items` - fetches all updated items.
-	* `/groups/123456/items?tag=tag1` - fetches items with a matching tag.
-	* `/users/123456/items?q=title` - fetches items with a matching title.
-	* `/groups/123456/items?itemType=book` - fetches items with a matching item type.
-	* `/users/123456/collections/HNR32E9N/items` - fetches items from a specified collection.
+	* `/users/123456/items` - fetch all updated items.
+	* `/groups/123456/items?tag=tag1` - fetch items with a matching tag.
+	* `/users/123456/items?q=title` - fetch items with a matching title.
+	* `/groups/123456/items?itemType=book` - fetch items with a matching item type.
+	* `/users/123456/collections/HNR32E9N/items` - fetch items from a specified collection.
 * `key` - A Zotero access key to the library we are subscribing. For public libraries key isn't necessary.
 * `skip` - Skip processing already existing items.
 * `plugins.name` - Activates the plugin for the current subscription.
