@@ -68,5 +68,5 @@ Explanation of JSON parameters in the request:
 	* `/users/123456/collections/HNR32E9N/items` - fetch items from a specified collection.
 * `key` - A Zotero access key to the library we are subscribing. For public libraries key isn't necessary.
 * `skip` - Skip processing already existing items.
-* `plugins.name` - Activates the plugin for the current subscription.
-* `plugins.options` - Plugin options for the current subscription. Only `webhookUrl` is necessary for this plugin.
+* `plugins[].name` - Activates the plugin for the current subscription.
+* `plugins[].options` - Plugin options for the current subscription. Only `webhookUrl` is necessary for this plugin.
